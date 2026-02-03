@@ -7,8 +7,6 @@
   const btnText = document.getElementById("modeText");
   const btnAudio = document.getElementById("modeAudio");
   const btnVisual = document.getElementById("modeVisual");
-  const themeToggle = document.getElementById("themeToggle");
-
   let viewMode = "latest";     // "latest" | "all"
   let typeFilter = "all";      // "all" | "text" | "audio" | "visual"
 
@@ -44,15 +42,7 @@
     on(btnVisual, typeFilter === "visual");
   }
 
-  function applyTheme(t) {
-    document.documentElement.setAttribute("data-theme", t);
-    localStorage.setItem("media-log-theme", t);
-  }
-
   // theme: default light; allow toggle if present
-  const savedTheme = localStorage.getItem("media-log-theme");
-  if (savedTheme) applyTheme(savedTheme);
-
   async function fetchJSON(path) {
     const res = await fetch(path, { cache: "no-store" });
     if (!res.ok) throw new Error(`HTTP ${res.status} for ${path}`);
@@ -122,12 +112,121 @@
   }
 
   // button wiring
-  btnLatest?.addEventListener("click", () => { viewMode = "latest"; setButtonStates(); load(); });
-  btnAll?.addEventListener("click", () => { viewMode = "all"; setButtonStates(); load(); });
+  btnLatest?.addEventListener("click", () => { viewMode = "latest"; 
+  const themeToggle = document.getElementById("themeToggle");
 
-  btnText?.addEventListener("click", () => { typeFilter = "text"; setButtonStates(); load(); });
-  btnAudio?.addEventListener("click", () => { typeFilter = "audio"; setButtonStates(); load(); });
-  btnVisual?.addEventListener("click", () => { typeFilter = "visual"; setButtonStates(); load(); });
+  function applyTheme(theme) {
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("media-log-theme", theme);
+    if (themeToggle) {
+      themeToggle.textContent = theme === "dark" ? "⏾" : "⭘";
+    }
+  }
+
+  const savedTheme = localStorage.getItem("media-log-theme") || "light";
+  applyTheme(savedTheme);
+
+  themeToggle?.addEventListener("click", () => {
+    const cur = document.documentElement.getAttribute("data-theme") || "light";
+    applyTheme(cur === "dark" ? "light" : "dark");
+  });
+
+  setButtonStates(); load(); });
+  btnAll?.addEventListener("click", () => { viewMode = "all"; 
+  const themeToggle = document.getElementById("themeToggle");
+
+  function applyTheme(theme) {
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("media-log-theme", theme);
+    if (themeToggle) {
+      themeToggle.textContent = theme === "dark" ? "⏾" : "⭘";
+    }
+  }
+
+  const savedTheme = localStorage.getItem("media-log-theme") || "light";
+  applyTheme(savedTheme);
+
+  themeToggle?.addEventListener("click", () => {
+    const cur = document.documentElement.getAttribute("data-theme") || "light";
+    applyTheme(cur === "dark" ? "light" : "dark");
+  });
+
+  setButtonStates(); load(); });
+
+  btnText?.addEventListener("click", () => { typeFilter = "text"; 
+  const themeToggle = document.getElementById("themeToggle");
+
+  function applyTheme(theme) {
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("media-log-theme", theme);
+    if (themeToggle) {
+      themeToggle.textContent = theme === "dark" ? "⏾" : "⭘";
+    }
+  }
+
+  const savedTheme = localStorage.getItem("media-log-theme") || "light";
+  applyTheme(savedTheme);
+
+  themeToggle?.addEventListener("click", () => {
+    const cur = document.documentElement.getAttribute("data-theme") || "light";
+    applyTheme(cur === "dark" ? "light" : "dark");
+  });
+
+  setButtonStates(); load(); });
+  btnAudio?.addEventListener("click", () => { typeFilter = "audio"; 
+  const themeToggle = document.getElementById("themeToggle");
+
+  function applyTheme(theme) {
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("media-log-theme", theme);
+    if (themeToggle) {
+      themeToggle.textContent = theme === "dark" ? "⏾" : "⭘";
+    }
+  }
+
+  const savedTheme = localStorage.getItem("media-log-theme") || "light";
+  applyTheme(savedTheme);
+
+  themeToggle?.addEventListener("click", () => {
+    const cur = document.documentElement.getAttribute("data-theme") || "light";
+    applyTheme(cur === "dark" ? "light" : "dark");
+  });
+
+  setButtonStates(); load(); });
+  btnVisual?.addEventListener("click", () => { typeFilter = "visual"; 
+  const themeToggle = document.getElementById("themeToggle");
+
+  function applyTheme(theme) {
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("media-log-theme", theme);
+    if (themeToggle) {
+      themeToggle.textContent = theme === "dark" ? "⏾" : "⭘";
+    }
+  }
+
+  const savedTheme = localStorage.getItem("media-log-theme") || "light";
+  applyTheme(savedTheme);
+
+  themeToggle?.addEventListener("click", () => {
+    const cur = document.documentElement.getAttribute("data-theme") || "light";
+    applyTheme(cur === "dark" ? "light" : "dark");
+  });
+
+  setButtonStates(); load(); });
+
+  
+  const themeToggle = document.getElementById("themeToggle");
+
+  function applyTheme(theme) {
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("media-log-theme", theme);
+    if (themeToggle) {
+      themeToggle.textContent = theme === "dark" ? "⏾" : "⭘";
+    }
+  }
+
+  const savedTheme = localStorage.getItem("media-log-theme") || "light";
+  applyTheme(savedTheme);
 
   themeToggle?.addEventListener("click", () => {
     const cur = document.documentElement.getAttribute("data-theme") || "light";
