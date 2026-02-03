@@ -2,6 +2,15 @@
   const content = document.getElementById("content");
   const btnLatest = document.getElementById("modeLatest");
   const btnAll = document.getElementById("modeAll");
+  const themeToggle = document.getElementById("themeToggle");
+
+  function applyTheme(t){
+    document.documentElement.setAttribute("data-theme", t);
+    localStorage.setItem("media-log-theme", t);
+  }
+
+  const savedTheme = localStorage.getItem("media-log-theme");
+  if (savedTheme) applyTheme(savedTheme);
 
   let mode = "latest";
 
@@ -10,7 +19,7 @@
       .replaceAll("&", "&amp;")
       .replaceAll("<", "&lt;")
       .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
+      .replaceAll("\"", "&quot;")
       .replaceAll("'", "&#039;");
   }
 
@@ -24,10 +33,7 @@
 
   function groupItems(items) {
     const groups = { reading: [], music: [], video: [] };
-    for (const it of items) {
-      const type = normalizeType(it.type);
-      groups[type].push(it);
-    }
+    for (const it of items) groups[normalizeType(it.type)].push(it);
     return groups;
   }
 
@@ -61,35 +67,28 @@
 
   async function fetchJSON(path) {
     const res = await fetch(path, { cache: "no-store" });
-    if (!res.ok) throw new Error(`HTTP ${res.status} for ${path}`);
+    if (!res.ok) throw new Error();
     return res.json();
   }
 
   function setButtons() {
-    if (!btnLatest || !btnAll) return;
-    btnLatest.classList.toggle("is-on", mode === "latest");
-    btnAll.classList.toggle("is-on", mode === "all");
+    btnLatest?.classList.toggle("is-on", mode === "latest");
+    btnAll?.classList.toggle("is-on", mode === "all");
   }
 
   async function load() {
     content.innerHTML = `<div class="day">loading…</div>`;
-
     let dates;
     try {
       dates = await fetchJSON("./data/index.json");
-    } catch (e) {
-      content.innerHTML = `<div class="day">could not load data/index.json</div>`;
-      return;
-    }
-
-    if (!Array.isArray(dates) || dates.length === 0) {
+    } catch {
       content.innerHTML = `<div class="day">no entries yet</div>`;
       return;
     }
 
     const slice = mode === "latest" ? dates.slice(0, 1) : dates;
-
     const blocks = [];
+
     for (const d of slice) {
       try {
         const items = await fetchJSON(`./data/${d}.json`);
@@ -102,10 +101,13 @@
     content.innerHTML = blocks.join("");
   }
 
-  if (btnLatest && btnAll) {
-    btnLatest.addEventListener("click", () => { mode = "latest"; setButtons(); load(); });
-    btnAll.addEventListener("click", () => { mode = "all"; setButtons(); load(); });
-  }
+  btnLatest?.addEventListener("click", () => { mode = "latest"; setButtons(); load(); });
+  btnAll?.addEventListener("click", () => { mode = "all"; setButtons(); load(); });
+
+  themeToggle?.addEventListener("click", () => {
+    const cur = document.documentElement.getAttribute("data-theme") || "light";
+    applyTheme(cur === "dark" ? "light" : "dark");
+  });
 
   setButtons();
   load();

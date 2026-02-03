@@ -12,21 +12,22 @@
       <div>
         <h1>media log</h1>
         <p class="desc">
-          a small daily ledger of what i consumed — links grouped as reading | music | video.
-          entries are stored as one json file per day in <code>data/</code>, plus a small date manifest.
+          a small daily ledger of the media i consumed.
         </p>
       </div>
+
       <div class="controls">
         <button id="modeLatest" class="btn is-on" type="button">latest</button>
         <button id="modeAll" class="btn" type="button">all</button>
+        <button id="themeToggle" class="btn" type="button" aria-label="toggle theme">
+          light / dark
+        </button>
       </div>
     </header>
 
     <section id="content" class="content" aria-live="polite"></section>
 
-    <footer class="foot">
-      <span>add entries with <code>./mlog.py</code> or by editing <code>data/YYYY-MM-DD.json</code></span>
-    </footer>
+    <footer class="foot"></footer>
   </main>
 
   <script src="./assets/app.js"></script>
