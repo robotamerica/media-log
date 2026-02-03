@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>media log embed</title>
+  <link rel="stylesheet" href="./assets/style.css" />
+  <style>
+    body { background: transparent; }
+    .wrap { padding: 0.75rem; }
+    .top, .foot, .controls, .desc { display: none; }
+    h2 { margin-top: 0; }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section id="content" class="content" aria-live="polite"></section>
+  </main>
+
+  <script>
+    window.MEDIA_LOG_EMBED = { mode: "latest" };
+  </script>
+  <script src="./assets/embed.js"></script>
+</body>
+</html>
