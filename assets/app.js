@@ -77,7 +77,7 @@
   }
 
   async function load() {
-    setStatus("loading…");
+    setStatus("");
     content.innerHTML = "";
 
     let dates;
@@ -91,7 +91,7 @@
 
     if (!Array.isArray(dates) || dates.length === 0) {
       content.innerHTML = `<article class="day">no entries yet</article>`;
-      setStatus("ready");
+      setStatus("");
       return;
     }
 
@@ -108,7 +108,7 @@
     }
 
     content.innerHTML = blocks.join("");
-    setStatus("ready");
+    setStatus("");
   }
 
   // button wiring

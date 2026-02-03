@@ -129,3 +129,27 @@ a{
   color: var(--muted);
   font-size: 0.9em;
 }
+
+/* ─────────────────────────────────────────────
+   dark mode — soft moonlight accents
+   ───────────────────────────────────────────── */
+
+html[data-theme="dark"] .btn{
+  border-color: #3a3a2a;
+  color: #e6e6d8;
+}
+
+html[data-theme="dark"] .btn.is-on{
+  border-color: #e6dc9a;
+  background: rgba(230, 220, 154, 0.08);
+  color: #f4f1d0;
+}
+
+html[data-theme="dark"] .btn:hover{
+  background: rgba(230, 220, 154, 0.06);
+}
+
+/* theme toggle icon */
+html[data-theme="dark"] #themeToggle{
+  color: #f1e9b6;
+}
