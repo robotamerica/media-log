@@ -3,7 +3,16 @@
   const btnLatest = document.getElementById("modeLatest");
   const btnAll = document.getElementById("modeAll");
 
+    const themeToggle = document.getElementById("themeToggle");
+
+  function applyTheme(t){
+    document.documentElement.setAttribute("data-theme", t);
+    localStorage.setItem("media-log-theme", t);
   }
+
+  const savedTheme = localStorage.getItem("media-log-theme");
+  if (savedTheme) applyTheme(savedTheme);
+}
 
 
   let mode = "latest";
@@ -96,7 +105,12 @@
   }
 
   btnLatest?.addEventListener("click", () => { mode = "latest"; setButtons(); load(); });
-  btnAll?.addEventListener("click", () => { mode = "all"; setButtons(); load(); });
+  btnAll?.addEventListener("click", () => { mode = "all"; setButtons(); 
+  themeToggle?.addEventListener("click", () => {
+    const cur = document.documentElement.getAttribute("data-theme") || "light";
+    applyTheme(cur === "dark" ? "light" : "dark");
+  });
+load(); });
 
   });
 
