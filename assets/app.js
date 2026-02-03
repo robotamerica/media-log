@@ -1,135 +1,139 @@
-(() => {
-  const TYPES = ["text", "audio", "visual"];
+(async function () {
+  const content = document.getElementById("content");
+  const status = document.getElementById("status");
 
-  const $ = (id) => document.getElementById(id);
+  const btnLatest = document.getElementById("modeLatest");
+  const btnAll = document.getElementById("modeAll");
+  const btnText = document.getElementById("modeText");
+  const btnAudio = document.getElementById("modeAudio");
+  const btnVisual = document.getElementById("modeVisual");
+  const themeToggle = document.getElementById("themeToggle");
 
-  function esc(s="") {
-    return String(s)
-      .replaceAll("&","&amp;")
-      .replaceAll("<","&lt;")
-      .replaceAll(">","&gt;")
-      .replaceAll('"',"&quot;")
-      .replaceAll("'","&#039;");
+  let viewMode = "latest";     // "latest" | "all"
+  let typeFilter = "all";      // "all" | "text" | "audio" | "visual"
+
+  function setStatus(s) {
+    if (status) status.textContent = s || "";
   }
 
-  function setActive(btnId) {
-    ["modeAll", "modeText", "modeAudio", "modeVisual"].forEach((id) => {
-      const el = $(id);
-      if (!el) return;
-      el.setAttribute("aria-pressed", id === btnId ? "true" : "false");
-      el.classList.toggle("active", id === btnId);
-    });
+  function esc(s) {
+    return String(s ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
   }
 
-  function applyFilter(typeOrAll) {
-    document.querySelectorAll("[data-entry-type]").forEach((el) => {
-      const t = el.getAttribute("data-entry-type");
-      el.style.display = (typeOrAll === "all" || t === typeOrAll) ? "" : "none";
-    });
+  function normalizeType(t) {
+    t = (t || "").toLowerCase().trim();
+    if (t === "t" || t === "text") return "text";
+    if (t === "a" || t === "audio") return "audio";
+    if (t === "v" || t === "visual") return "visual";
+    return "text";
   }
 
-  function wireButtons() {
-    const btnAll = $("modeAll");
-    const btnText = $("modeText");
-    const btnAudio = $("modeAudio");
-    const btnVisual = $("modeVisual");
+  function setButtonStates() {
+    const on = (el, yes) => el && el.classList.toggle("is-on", !!yes);
 
-    btnAll?.addEventListener("click", () => { setActive("modeAll"); applyFilter("all"); });
-    btnText?.addEventListener("click", () => { setActive("modeText"); applyFilter("text"); });
-    btnAudio?.addEventListener("click", () => { setActive("modeAudio"); applyFilter("audio"); });
-    btnVisual?.addEventListener("click", () => { setActive("modeVisual"); applyFilter("visual"); });
+    on(btnLatest, viewMode === "latest");
+    on(btnAll, viewMode === "all");
 
-    // default
-    setActive("modeAll");
-    applyFilter("all");
+    on(btnText, typeFilter === "text");
+    on(btnAudio, typeFilter === "audio");
+    on(btnVisual, typeFilter === "visual");
   }
+
+  function applyTheme(t) {
+    document.documentElement.setAttribute("data-theme", t);
+    localStorage.setItem("media-log-theme", t);
+  }
+
+  // theme: default light; allow toggle if present
+  const savedTheme = localStorage.getItem("media-log-theme");
+  if (savedTheme) applyTheme(savedTheme);
 
   async function fetchJSON(path) {
     const res = await fetch(path, { cache: "no-store" });
-    if (!res.ok) throw new Error(`${path} → ${res.status}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status} for ${path}`);
     return res.json();
   }
 
-  function renderEntry(entry) {
-    const type = (entry.type || "").toLowerCase();
-    const url = entry.url || "";
-    const title = entry.title || url;
-    const note = entry.note || "";
+  function renderEntry(it) {
+    const type = normalizeType(it.type);
+    if (typeFilter !== "all" && type !== typeFilter) return "";
 
-    const pill = type ? `<span class="pill">${esc(type)}</span>` : "";
-    const noteHtml = note ? `<div class="note">${esc(note)}</div>` : "";
+    const title = it.title ? esc(it.title) : esc(it.url);
+    const note = it.note ? ` <span class="note">— ${esc(it.note)}</span>` : "";
 
     return `
-      <li class="entry" data-entry-type="${esc(type)}">
-        <div class="row">
-          ${pill}
-          <a class="link" href="${esc(url)}" target="_blank" rel="noopener noreferrer">${esc(title)}</a>
-        </div>
-        ${noteHtml}
-      </li>
+      <div class="item">
+        <span class="bullet">•</span>
+        <span class="note">${esc(type)}</span>
+        <a href="${esc(it.url)}" target="_blank" rel="noopener noreferrer">${title}</a>
+        ${note}
+      </div>
     `;
   }
 
-  function renderDay(dateStr, entries) {
-    const items = (entries || [])
-      .filter(e => e && typeof e === "object" && e.url)
-      .map(renderEntry)
-      .join("");
-
+  function renderDay(date, items) {
+    const rows = (items || []).map(renderEntry).filter(Boolean).join("");
     return `
-      <section class="day">
-        <h2 class="dayTitle">${esc(dateStr)}</h2>
-        <ul class="entries">
-          ${items || `<li class="entry empty">no entries</li>`}
-        </ul>
-      </section>
+      <article class="day">
+        <h2>${esc(date)}</h2>
+        ${rows || `<div class="note">no entries</div>`}
+      </article>
     `;
   }
 
   async function load() {
-    const out = $("log");
-    const status = $("status");
-    if (!out) return;
+    setStatus("loading…");
+    content.innerHTML = "";
 
+    let dates;
     try {
-      status && (status.textContent = "loading…");
-      const dates = await fetchJSON("./data/index.json");
-
-      if (!Array.isArray(dates) || dates.length === 0) {
-        out.innerHTML = `<p class="muted">no days yet. add your first entry with <code>./mlog.py</code>.</p>`;
-        status && (status.textContent = "ready");
-        return;
-      }
-
-      const pages = await Promise.all(
-        dates.map(async (d) => {
-          try {
-            const entries = await fetchJSON(`./data/${d}.json`);
-            return renderDay(d, entries);
-          } catch (e) {
-            return renderDay(d, []);
-          }
-        })
-      );
-
-      out.innerHTML = pages.join("\n");
-      status && (status.textContent = "ready");
+      dates = await fetchJSON("./data/index.json");
     } catch (e) {
-      out.innerHTML = `
-        <p class="error">
-          could not load your log. check that <code>data/index.json</code> exists and is valid JSON.
-          <br/>detail: <code>${esc(e.message)}</code>
-        </p>
-      `;
-      status && (status.textContent = "error");
-    } finally {
-      // always re-apply current filter after render
-      applyFilter("all");
+      content.innerHTML = `<article class="day">could not load data/index.json</article>`;
+      setStatus("error");
+      return;
     }
+
+    if (!Array.isArray(dates) || dates.length === 0) {
+      content.innerHTML = `<article class="day">no entries yet</article>`;
+      setStatus("ready");
+      return;
+    }
+
+    const slice = viewMode === "latest" ? dates.slice(0, 1) : dates;
+
+    const blocks = [];
+    for (const d of slice) {
+      try {
+        const items = await fetchJSON(`./data/${d}.json`);
+        blocks.push(renderDay(d, items));
+      } catch {
+        blocks.push(renderDay(d, []));
+      }
+    }
+
+    content.innerHTML = blocks.join("");
+    setStatus("ready");
   }
 
-  document.addEventListener("DOMContentLoaded", () => {
-    wireButtons();
-    load();
+  // button wiring
+  btnLatest?.addEventListener("click", () => { viewMode = "latest"; setButtonStates(); load(); });
+  btnAll?.addEventListener("click", () => { viewMode = "all"; setButtonStates(); load(); });
+
+  btnText?.addEventListener("click", () => { typeFilter = "text"; setButtonStates(); load(); });
+  btnAudio?.addEventListener("click", () => { typeFilter = "audio"; setButtonStates(); load(); });
+  btnVisual?.addEventListener("click", () => { typeFilter = "visual"; setButtonStates(); load(); });
+
+  themeToggle?.addEventListener("click", () => {
+    const cur = document.documentElement.getAttribute("data-theme") || "light";
+    applyTheme(cur === "dark" ? "light" : "dark");
   });
+
+  setButtonStates();
+  load();
 })();
