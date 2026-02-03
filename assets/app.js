@@ -1,119 +1,135 @@
-(async function () {
-  const content = document.getElementById("content");
-  const btnLatest = document.getElementById("modeLatest");
-  const btnAll = document.getElementById("modeAll");
+(() => {
+  const TYPES = ["text", "audio", "visual"];
 
-    const themeToggle = document.getElementById("themeToggle");
+  const $ = (id) => document.getElementById(id);
 
-  function applyTheme(t){
-    document.documentElement.setAttribute("data-theme", t);
-    localStorage.setItem("media-log-theme", t);
+  function esc(s="") {
+    return String(s)
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
   }
 
-  const savedTheme = localStorage.getItem("media-log-theme");
-  if (savedTheme) applyTheme(savedTheme);
-}
-
-
-  let mode = "latest";
-
-  function esc(s) {
-    return String(s ?? "")
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll("\"", "&quot;")
-      .replaceAll("'", "&#039;");
+  function setActive(btnId) {
+    ["modeAll", "modeText", "modeAudio", "modeVisual"].forEach((id) => {
+      const el = $(id);
+      if (!el) return;
+      el.setAttribute("aria-pressed", id === btnId ? "true" : "false");
+      el.classList.toggle("active", id === btnId);
+    });
   }
 
-  function normalizeType(t) {
-    t = (t || "").toLowerCase().trim();
-    if (t === "read" || t === "reading" || t === "r") return "reading";
-    if (t === "song" || t === "music" || t === "m") return "music";
-    if (t === "watch" || t === "video" || t === "v") return "video";
-    return "reading";
+  function applyFilter(typeOrAll) {
+    document.querySelectorAll("[data-entry-type]").forEach((el) => {
+      const t = el.getAttribute("data-entry-type");
+      el.style.display = (typeOrAll === "all" || t === typeOrAll) ? "" : "none";
+    });
   }
 
-  function groupItems(items) {
-    const groups = { reading: [], music: [], video: [] };
-    for (const it of items) groups[normalizeType(it.type)].push(it);
-    return groups;
-  }
+  function wireButtons() {
+    const btnAll = $("modeAll");
+    const btnText = $("modeText");
+    const btnAudio = $("modeAudio");
+    const btnVisual = $("modeVisual");
 
-  function renderDay(date, items) {
-    const groups = groupItems(items || []);
-    const block = (label, list) => {
-      if (!list.length) return "";
-      const rows = list.map((it) => {
-        const title = it.title ? esc(it.title) : esc(it.url);
-        const note = it.note ? ` <span class="note">— ${esc(it.note)}</span>` : "";
-        return `
-          <div class="item">
-            <span class="bullet">•</span>
-            <a href="${esc(it.url)}" target="_blank" rel="noopener noreferrer">${title}</a>
-            ${note}
-          </div>
-        `;
-      }).join("");
-      return `<div class="group"><h3>${label}</h3>${rows}</div>`;
-    };
+    btnAll?.addEventListener("click", () => { setActive("modeAll"); applyFilter("all"); });
+    btnText?.addEventListener("click", () => { setActive("modeText"); applyFilter("text"); });
+    btnAudio?.addEventListener("click", () => { setActive("modeAudio"); applyFilter("audio"); });
+    btnVisual?.addEventListener("click", () => { setActive("modeVisual"); applyFilter("visual"); });
 
-    return `
-      <article class="day">
-        <h2>${esc(date)}</h2>
-        ${block("reading", groups.reading)}
-        ${block("music", groups.music)}
-        ${block("video", groups.video)}
-      </article>
-    `;
+    // default
+    setActive("modeAll");
+    applyFilter("all");
   }
 
   async function fetchJSON(path) {
     const res = await fetch(path, { cache: "no-store" });
-    if (!res.ok) throw new Error();
+    if (!res.ok) throw new Error(`${path} → ${res.status}`);
     return res.json();
   }
 
-  function setButtons() {
-    btnLatest?.classList.toggle("is-on", mode === "latest");
-    btnAll?.classList.toggle("is-on", mode === "all");
+  function renderEntry(entry) {
+    const type = (entry.type || "").toLowerCase();
+    const url = entry.url || "";
+    const title = entry.title || url;
+    const note = entry.note || "";
+
+    const pill = type ? `<span class="pill">${esc(type)}</span>` : "";
+    const noteHtml = note ? `<div class="note">${esc(note)}</div>` : "";
+
+    return `
+      <li class="entry" data-entry-type="${esc(type)}">
+        <div class="row">
+          ${pill}
+          <a class="link" href="${esc(url)}" target="_blank" rel="noopener noreferrer">${esc(title)}</a>
+        </div>
+        ${noteHtml}
+      </li>
+    `;
+  }
+
+  function renderDay(dateStr, entries) {
+    const items = (entries || [])
+      .filter(e => e && typeof e === "object" && e.url)
+      .map(renderEntry)
+      .join("");
+
+    return `
+      <section class="day">
+        <h2 class="dayTitle">${esc(dateStr)}</h2>
+        <ul class="entries">
+          ${items || `<li class="entry empty">no entries</li>`}
+        </ul>
+      </section>
+    `;
   }
 
   async function load() {
-    content.innerHTML = `<div class="day">loading…</div>`;
-    let dates;
+    const out = $("log");
+    const status = $("status");
+    if (!out) return;
+
     try {
-      dates = await fetchJSON("./data/index.json");
-    } catch {
-      content.innerHTML = `<div class="day">no entries yet</div>`;
-      return;
-    }
+      status && (status.textContent = "loading…");
+      const dates = await fetchJSON("./data/index.json");
 
-    const slice = mode === "latest" ? dates.slice(0, 1) : dates;
-    const blocks = [];
-
-    for (const d of slice) {
-      try {
-        const items = await fetchJSON(`./data/${d}.json`);
-        blocks.push(renderDay(d, items));
-      } catch {
-        blocks.push(renderDay(d, []));
+      if (!Array.isArray(dates) || dates.length === 0) {
+        out.innerHTML = `<p class="muted">no days yet. add your first entry with <code>./mlog.py</code>.</p>`;
+        status && (status.textContent = "ready");
+        return;
       }
-    }
 
-    content.innerHTML = blocks.join("");
+      const pages = await Promise.all(
+        dates.map(async (d) => {
+          try {
+            const entries = await fetchJSON(`./data/${d}.json`);
+            return renderDay(d, entries);
+          } catch (e) {
+            return renderDay(d, []);
+          }
+        })
+      );
+
+      out.innerHTML = pages.join("\n");
+      status && (status.textContent = "ready");
+    } catch (e) {
+      out.innerHTML = `
+        <p class="error">
+          could not load your log. check that <code>data/index.json</code> exists and is valid JSON.
+          <br/>detail: <code>${esc(e.message)}</code>
+        </p>
+      `;
+      status && (status.textContent = "error");
+    } finally {
+      // always re-apply current filter after render
+      applyFilter("all");
+    }
   }
 
-  btnLatest?.addEventListener("click", () => { mode = "latest"; setButtons(); load(); });
-  btnAll?.addEventListener("click", () => { mode = "all"; setButtons(); 
-  themeToggle?.addEventListener("click", () => {
-    const cur = document.documentElement.getAttribute("data-theme") || "light";
-    applyTheme(cur === "dark" ? "light" : "dark");
+  document.addEventListener("DOMContentLoaded", () => {
+    wireButtons();
+    load();
   });
-load(); });
-
-  });
-
-  setButtons();
-  load();
 })();
