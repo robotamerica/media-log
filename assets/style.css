@@ -1,237 +1,114 @@
 :root{
-  --w: 760px;
-  --radius: 14px;
-  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
-
-  /* light */
-  --ink: #0b0f0c;
-  --muted: #56605a;
-  --paper: #fbfcfb;
-  --line: #e3e7e3;
+  --bg:#fbfbf8;
+  --ink:#101010;
+  --muted:#6b6b6b;
+  --card:#ffffff;
+  --border:#e6e6e1;
+  --btn:#f5f5f1;
 }
 
 html[data-theme="dark"]{
-  --ink: #e6e8e6;
-  --muted: #9aa29c;
-  --paper: #0e1110;
-  --line: #2a2f2c;
+  --bg:#0f1110;
+  --ink:#ecebe3;
+  --muted:#b6b4a8;
+  --card:#121413;
+  --border:#2a2c2a;
+  --btn:#171a18;
 }
 
 *{ box-sizing:border-box; }
-html,body{ height:100%; }
 body{
   margin:0;
-  font-family: var(--mono);
-  color: var(--ink);
-  background: var(--paper);
-  line-height:1.55;
+  background:var(--bg);
+  color:var(--ink);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
 }
 
 .wrap{
-  max-width: var(--w);
+  max-width: 860px;
   margin: 0 auto;
-  padding: 1.2rem;
+  padding: 1.25rem;
 }
 
 .top{
   display:flex;
-  align-items:flex-start;
+  gap:1rem;
   justify-content:space-between;
-  gap: 1rem;
-  margin-bottom: 1rem;
+  align-items:flex-start;
 }
 
-h1{
-  font-size: 1.05rem;
-  margin:0;
-  letter-spacing:0.02em;
-  font-weight: 700;
-}
+h1{ margin:0 0 .25rem 0; font-size: 2rem; }
+.desc{ margin:0; color:var(--muted); line-height:1.4; }
 
-.desc{
-  margin: 0.45rem 0 0 0;
-  color: var(--muted);
-  font-size: 0.95em;
-  max-width: 52ch;
+.controls{
+  display:flex;
+  flex-wrap:wrap;
+  gap:.6rem;
+  justify-content:flex-end;
 }
-
-.controls{ display:flex; gap:0.5rem; flex-wrap: wrap; }
 
 .btn{
+  border:1px solid var(--border);
+  background:var(--btn);
+  color:var(--ink);
+  padding:.5rem .85rem;
+  border-radius:999px;
   font: inherit;
-  padding: 0.35rem 0.6rem;
-  border: 1px solid var(--line);
-  background: transparent;
-  border-radius: 999px;
-  cursor: pointer;
 }
 
 .btn.is-on{
-  border-color: var(--muted);
-  color: var(--ink);
-}
-
-.day{
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 0.9rem;
-  margin-bottom: 0.9rem;
-}
-
-.day h2{
-  margin:0 0 0.6rem 0;
-  font-size: 0.95rem;
-}
-
-.group{
-  margin-top: 0.75rem;
-  padding-top: 0.75rem;
-  border-top: 1px dashed var(--line);
-}
-
-.group:first-of-type{
-  margin-top:0;
-  padding-top:0;
-  border-top:none;
-}
-
-.group h3{
-  margin:0 0 0.4rem 0;
-  font-size: 0.85rem;
-  color: var(--muted);
-  font-weight: 700;
-  text-transform: lowercase;
-}
-
-.item{
-  margin: 0.35rem 0;
-  display:flex;
-  gap: 0.6rem;
-  align-items: baseline;
-}
-
-.bullet{ color: var(--muted); }
-
-a{
-  color: inherit;
-  text-decoration: underline;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 0.15em;
-}
-
-.note{
-  color: var(--muted);
-  font-size: 0.9em;
-}
-
-.foot{
-  margin-top: 1rem;
-  color: var(--muted);
-  font-size: 0.9em;
-}
-
-/* ─────────────────────────────────────────────
-   dark mode — soft moonlight accents
-   ───────────────────────────────────────────── */
-
-html[data-theme="dark"] .btn{
-  border-color: #3a3a2a;
-  color: #e6e6d8;
+  border-color: var(--ink);
 }
 
 html[data-theme="dark"] .btn.is-on{
-  border-color: #e6dc9a;
-  background: rgba(230, 220, 154, 0.08);
-  color: #f4f1d0;
+  border-color:#e6dc9a;
+  background: rgba(230,220,154,.08);
+  color:#f4f1d0;
 }
 
-html[data-theme="dark"] .btn:hover{
-  background: rgba(230, 220, 154, 0.06);
+.content{ margin-top:1rem; }
+
+.day{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius: 18px;
+  padding: 1rem;
 }
 
-/* theme toggle icon */
-html[data-theme="dark"] #themeToggle{
-  color: #f1e9b6;
+.day h2{ margin:.1rem 0 .75rem 0; }
+
+.item{
+  display:flex;
+  flex-wrap:wrap;
+  gap:.6rem;
+  align-items:baseline;
+  margin:.6rem 0;
 }
 
-/* ─────────────────────────────────────────────
-*    mobile layout fixes (android chrome/firefox)
-*       ───────────────────────────────────────────── */
+.bullet{ color:var(--muted); }
+.etype{ color:var(--muted); white-space:nowrap; }
+
+.item a{
+  color:var(--ink);
+  text-decoration: underline;
+  overflow-wrap:anywhere;
+  word-break: break-word;
+}
+
+.enote{
+  flex-basis:100%;
+  margin-left: 1.55rem;
+  color:var(--muted);
+  font-size:.92em;
+}
+
+.note{ color:var(--muted); }
 
 @media (max-width: 520px){
-    .wrap{ padding: 0.9rem; }
-
-  .top{
-        flex-direction: column;
-        align-items: stretch;
-        gap: 0.75rem;
-      }
-
-    .controls{
-        width: 100%;
-        justify-content: flex-start;
-      }
-
-    .btn{
-        padding: 0.42rem 0.7rem;
-      }
-
-    .day{
-        padding: 0.85rem;
-      }
-
-    /* turn each entry into a vertical stack */
-    .item{
-        display: block;
-        margin: 0.55rem 0;
-      }
-
-    /* keep bullet + type + link on the same "primary" line */
-    .item .bullet{
-        display: inline-block;
-        margin-right: 0.55rem;
-      }
-
-    /* the first .note in your markup is the type label */
-    .item > .note{
-        display: inline-block;
-        margin-right: 0.55rem;
-        white-space: nowrap;
-      }
-
-    /* link wraps naturally and doesn’t force horizontal scrolling */
-    .item a{
-        display: inline;
-        overflow-wrap: anywhere;
-        word-break: break-word;
-      }
-
-    /* the second .note (the one you render as "— note") should go below */
-    .item .note + a + .note{
-        display: block;
-        margin-left: 1.1rem; /* indent under bullet */
-        margin-top: 0.25rem;
-      }
+  .wrap{ padding: .95rem; }
+  .top{ flex-direction: column; align-items: stretch; }
+  .controls{ justify-content:flex-start; }
+  .day{ padding: .85rem; }
+  .item{ gap:.45rem; }
+  .enote{ margin-left: 1.25rem; }
 }
-  }
-  }
-  }
-  }
-  }
-  }
-  }
-  }
-  }
-}
-
-/* mobile-safe entry layout */
-.item{display:flex;flex-wrap:wrap;gap:.6rem;align-items:baseline}
-.etype{color:var(--muted);white-space:nowrap}
-.enote{flex-basis:100%;margin-left:1.55rem;color:var(--muted);font-size:.92em}
-@media (max-width:520px){.item{gap:.45rem}.enote{margin-left:1.25rem}.day{padding:.85rem}}
-
-/* mobile-safe entry layout */
-.item{display:flex;flex-wrap:wrap;gap:.6rem;align-items:baseline}
-.etype{color:var(--muted);white-space:nowrap}
-.enote{flex-basis:100%;margin-left:1.55rem;color:var(--muted);font-size:.92em}
-@media (max-width:520px){.item{gap:.45rem}.enote{margin-left:1.25rem}.day{padding:.85rem}}

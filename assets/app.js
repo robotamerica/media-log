@@ -1,9 +1,10 @@
 (() => {
   const content = document.getElementById("content");
+
   const btnLatest = document.getElementById("modeLatest");
-  const btnAll = document.getElementById("modeAll");
-  const btnText = document.getElementById("modeText");
-  const btnAudio = document.getElementById("modeAudio");
+  const btnAll    = document.getElementById("modeAll");
+  const btnText   = document.getElementById("modeText");
+  const btnAudio  = document.getElementById("modeAudio");
   const btnVisual = document.getElementById("modeVisual");
   const themeToggle = document.getElementById("themeToggle");
 
@@ -23,14 +24,47 @@
     if (t === "text" || t === "t") return "text";
     if (t === "audio" || t === "a") return "audio";
     if (t === "visual" || t === "v") return "visual";
-    // legacy support if any old data exists
+    // legacy support
     if (t === "reading") return "text";
     if (t === "music") return "audio";
     if (t === "video") return "visual";
     return "text";
   };
 
-  function setOn(el, on){ if (el) el.classList.toggle("is-on", lson); }
+  function setOn(el, on){ if (el) el.classList.toggle("is-on", cat > index.html <<'HTML'
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>media log</title>
+  <link rel="stylesheet" href="./assets/style.css" />
+</head>
+<body>
+  <main class="wrap">
+    <header class="top">
+      <div class="brand">
+        <h1>media log</h1>
+        <p class="desc">a small daily ledger of the media i consumed.</p>
+      </div>
+
+      <div class="controls">
+        <button id="modeLatest" class="btn is-on" type="button">latest</button>
+        <button id="modeAll" class="btn" type="button">all</button>
+        <button id="modeText" class="btn" type="button">text</button>
+        <button id="modeAudio" class="btn" type="button">audio</button>
+        <button id="modeVisual" class="btn" type="button">visual</button>
+        <button id="themeToggle" class="btn" type="button" aria-label="toggle theme">⭘</button>
+      </div>
+    </header>
+
+    <section id="content" class="content" aria-live="polite"></section>
+  </main>
+
+  <script src="./assets/app.js"></script>
+</body>
+</html>
+HTMLon); }
 
   function setButtons(){
     setOn(btnLatest, viewMode === "latest");
@@ -123,12 +157,12 @@
     }
   }
 
-  // wiring
+  // events
   btnLatest?.addEventListener("click", () => { viewMode = "latest"; setButtons(); load(); });
-  btnAll?.addEventListener("click", () => { viewMode = "all"; setButtons(); load(); });
-  btnText?.addEventListener("click", () => { typeFilter = "text"; setButtons(); load(); });
-  btnAudio?.addEventListener("click", () => { typeFilter = "audio"; setButtons(); load(); });
-  btnVisual?.addEventListener("click", () => { typeFilter = "visual"; setButtons(); load(); });
+  btnAll?.addEventListener("click",    () => { viewMode = "all";    setButtons(); load(); });
+  btnText?.addEventListener("click",   () => { typeFilter = "text";  setButtons(); load(); });
+  btnAudio?.addEventListener("click",  () => { typeFilter = "audio"; setButtons(); load(); });
+  btnVisual?.addEventListener("click", () => { typeFilter = "visual";setButtons(); load(); });
 
   themeToggle?.addEventListener("click", () => {
     const cur = document.documentElement.getAttribute("data-theme") || "light";
