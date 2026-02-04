@@ -223,3 +223,9 @@ html[data-theme="dark"] #themeToggle{
   }
   }
 }
+
+/* mobile-safe entry layout */
+.item{display:flex;flex-wrap:wrap;gap:.6rem;align-items:baseline}
+.etype{color:var(--muted);white-space:nowrap}
+.enote{flex-basis:100%;margin-left:1.55rem;color:var(--muted);font-size:.92em}
+@media (max-width:520px){.item{gap:.45rem}.enote{margin-left:1.25rem}.day{padding:.85rem}}
