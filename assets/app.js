@@ -1,68 +1,142 @@
-(async function () {
+(() => {
   const content = document.getElementById("content");
-  const status = document.getElementById("status");
-
   const btnLatest = document.getElementById("modeLatest");
   const btnAll = document.getElementById("modeAll");
   const btnText = document.getElementById("modeText");
   const btnAudio = document.getElementById("modeAudio");
   const btnVisual = document.getElementById("modeVisual");
-  let viewMode = "latest";     // "latest" | "all"
-  let typeFilter = "all";      // "all" | "text" | "audio" | "visual"
+  const themeToggle = document.getElementById("themeToggle");
 
-  function setStatus(s) {
-    if (status) status.textContent = s || "";
-  }
+  let viewMode = "latest"; // latest | all
+  let typeFilter = "all";  // all | text | audio | visual
 
-  function esc(s) {
-    return String(s ?? "")
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#039;");
-  }
+  const esc = (s="") =>
+    String(s ?? "")
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
 
-  function normalizeType(t) {
+  const normalizeType = (t) => {
     t = (t || "").toLowerCase().trim();
-    if (t === "t" || t === "text") return "text";
-    if (t === "a" || t === "audio") return "audio";
-    if (t === "v" || t === "visual") return "visual";
+    if (t === "text" || t === "t") return "text";
+    if (t === "audio" || t === "a") return "audio";
+    if (t === "visual" || t === "v") return "visual";
+    // legacy support if any old data exists
+    if (t === "reading") return "text";
+    if (t === "music") return "audio";
+    if (t === "video") return "visual";
     return "text";
+  };
+
+  function setOn(el, on){ if (el) el.classList.toggle("is-on", lson); }
+
+  function setButtons(){
+    setOn(btnLatest, viewMode === "latest");
+    setOn(btnAll, viewMode === "all");
+    setOn(btnText, typeFilter === "text");
+    setOn(btnAudio, typeFilter === "audio");
+    setOn(btnVisual, typeFilter === "visual");
   }
 
-  function setButtonStates() {
-    const on = (el, yes) => el && el.classList.toggle("is-on", !!yes);
-
-    on(btnLatest, viewMode === "latest");
-    on(btnAll, viewMode === "all");
-
-    on(btnText, typeFilter === "text");
-    on(btnAudio, typeFilter === "audio");
-    on(btnVisual, typeFilter === "visual");
+  function applyFilter(){
+    document.querySelectorAll(".item").forEach((el) => {
+      const t = el.getAttribute("data-type") || "text";
+      el.style.display = (typeFilter === "all" || t === typeFilter) ? "" : "none";
+    });
   }
 
-  // theme: default light; allow toggle if present
-  async function fetchJSON(path) {
+  function applyTheme(theme){
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("media-log-theme", theme);
+    if (themeToggle) themeToggle.textContent = (theme === "dark") ? "⏾" : "⭘";
+  }
+
+  async function fetchJSON(path){
     const res = await fetch(path, { cache: "no-store" });
-    if (!res.ok) throw new Error(`HTTP ${res.status} for ${path}`);
+    if (!res.ok) throw new Error(`${path} → ${res.status}`);
     return res.json();
   }
 
-  function renderEntry(it) {
-  const type = normalizeType(it.type);
-  if (typeFilter !== "all" && type !== typeFilter) return "";
+  function renderEntry(it){
+    const t = normalizeType(it.type);
+    if (typeFilter !== "all" && t !== typeFilter) return "";
 
-  const title = it.title ? esc(it.title) : esc(it.url);
-  const note = it.note ? String(it.note) : "";
-  const noteHtml = note ? `<div class="enote">— ${esc(note)}</div>` : "";
+    const url = it.url || "";
+    const title = it.title ? esc(it.title) : esc(url);
+    const note = it.note ? String(it.note) : "";
+    const noteHtml = note ? `<div class="enote">— ${esc(note)}</div>` : "";
 
-  return `
-    <div class="item">
-      <span class="bullet">•</span>
-      <span class="etype">${esc(type)}</span>
-      <a href="${esc(it.url)}" target="_blank" rel="noopener noreferrer">${title}</a>
-      ${noteHtml}
-    </div>
-  `;
+    return `
+      <div class="item" data-type="${esc(t)}">
+        <span class="bullet">•</span>
+        <span class="etype">${esc(t)}</span>
+        <a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${title}</a>
+        ${noteHtml}
+      </div>
+    `;
+  }
+
+  function renderDay(date, items){
+    const rows = (items || []).map(renderEntry).filter(Boolean).join("");
+    return `
+      <article class="day">
+        <h2>${esc(date)}</h2>
+        ${rows || `<div class="note">no entries</div>`}
+      </article>
+    `;
+  }
+
+  async function load(){
+    if (!content) return;
+    content.innerHTML = "";
+
+    try {
+      const dates = await fetchJSON("./data/index.json");
+      if (!Array.isArray(dates) || dates.length === 0){
+        content.innerHTML = `<article class="day"><div class="note">no entries yet</div></article>`;
+        return;
+      }
+
+      const useDates = (viewMode === "latest") ? dates.slice(0, 1) : dates;
+
+      const blocks = [];
+      for (const d of useDates){
+        try {
+          const items = await fetchJSON(`./data/${d}.json`);
+          blocks.push(renderDay(d, items));
+        } catch {
+          blocks.push(renderDay(d, []));
+        }
+      }
+
+      content.innerHTML = blocks.join("");
+      applyFilter();
+    } catch (e) {
+      content.innerHTML = `
+        <article class="day">
+          <div class="note">could not load data</div>
+          <div class="note"><code>${esc(e.message)}</code></div>
+        </article>
+      `;
+    }
+  }
+
+  // wiring
+  btnLatest?.addEventListener("click", () => { viewMode = "latest"; setButtons(); load(); });
+  btnAll?.addEventListener("click", () => { viewMode = "all"; setButtons(); load(); });
+  btnText?.addEventListener("click", () => { typeFilter = "text"; setButtons(); load(); });
+  btnAudio?.addEventListener("click", () => { typeFilter = "audio"; setButtons(); load(); });
+  btnVisual?.addEventListener("click", () => { typeFilter = "visual"; setButtons(); load(); });
+
+  themeToggle?.addEventListener("click", () => {
+    const cur = document.documentElement.getAttribute("data-theme") || "light";
+    applyTheme(cur === "dark" ? "light" : "dark");
+  });
+
+  // init
+  setButtons();
+  applyTheme(localStorage.getItem("media-log-theme") || "light");
+  load();
 })();
