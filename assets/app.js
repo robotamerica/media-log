@@ -2,14 +2,14 @@
   const content = document.getElementById("content");
 
   const btnLatest = document.getElementById("modeLatest");
-  const btnAll    = document.getElementById("modeAll");
-  const btnText   = document.getElementById("modeText");
-  const btnAudio  = document.getElementById("modeAudio");
+  const btnAll = document.getElementById("modeAll");
+  const btnText = document.getElementById("modeText");
+  const btnAudio = document.getElementById("modeAudio");
   const btnVisual = document.getElementById("modeVisual");
   const themeToggle = document.getElementById("themeToggle");
 
-  let viewMode = "latest"; // latest | all
-  let typeFilter = "all";  // all | text | audio | visual
+  let viewMode = "latest";
+  const activeTypes = new Set(["text", "audio", "visual"]);
 
   const esc = (s="") =>
     String(s ?? "")
@@ -24,46 +24,58 @@
     if (t === "text" || t === "t") return "text";
     if (t === "audio" || t === "a") return "audio";
     if (t === "visual" || t === "v") return "visual";
-    // legacy support
     if (t === "reading") return "text";
     if (t === "music") return "audio";
     if (t === "video") return "visual";
     return "text";
   };
 
-  function setOn(el, on){ if (el) el.classList.toggle("is-on", !!on); }
+  const setOn = (el, on) => el && el.classList.toggle("is-on", !!on);
 
-  function setButtons(){
+  const syncTypeButton = (btn, type) => {
+    const on = activeTypes.has(type);
+    setOn(btn, on);
+    btn?.setAttribute("aria-pressed", on ? "true" : "false");
+  };
+
+  const setButtons = () => {
     setOn(btnLatest, viewMode === "latest");
     setOn(btnAll, viewMode === "all");
-    setOn(btnText, typeFilter === "text");
-    setOn(btnAudio, typeFilter === "audio");
-    setOn(btnVisual, typeFilter === "visual");
-  }
+    syncTypeButton(btnText, "text");
+    syncTypeButton(btnAudio, "audio");
+    syncTypeButton(btnVisual, "visual");
+  };
 
-  function applyFilter(){
-    document.querySelectorAll(".item").forEach((el) => {
+  const toggleType = (type) => {
+    activeTypes.has(type) ? activeTypes.delete(type) : activeTypes.add(type);
+    if (activeTypes.size === 0) {
+      activeTypes.add("text");
+      activeTypes.add("audio");
+      activeTypes.add("visual");
+    }
+  };
+
+  const applyFilter = () => {
+    document.querySelectorAll(".item").forEach(el => {
       const t = el.getAttribute("data-type") || "text";
-      el.style.display = (typeFilter === "all" || t === typeFilter) ? "" : "none";
+      el.style.display = activeTypes.has(t) ? "" : "none";
     });
-  }
+  };
 
-  function applyTheme(theme){
+  const applyTheme = (theme) => {
     document.documentElement.setAttribute("data-theme", theme);
     localStorage.setItem("media-log-theme", theme);
-    if (themeToggle) themeToggle.textContent = (theme === "dark") ? "⏾" : "⭘";
-  }
+    themeToggle.textContent = theme === "dark" ? "⏾" : "⭘";
+  };
 
-  async function fetchJSON(path){
+  const fetchJSON = async (path) => {
     const res = await fetch(path, { cache: "no-store" });
-    if (!res.ok) throw new Error(`${path} → ${res.status}`);
+    if (!res.ok) throw new Error(path);
     return res.json();
-  }
+  };
 
-  function renderEntry(it){
+  const renderEntry = (it) => {
     const t = normalizeType(it.type);
-    if (typeFilter !== "all" && t !== typeFilter) return "";
-
     const url = it.url || "";
     const title = it.title ? esc(it.title) : esc(url);
     const note = it.note ? String(it.note) : "";
@@ -77,33 +89,22 @@
         ${noteHtml}
       </div>
     `;
-  }
+  };
 
-  function renderDay(date, items){
-    const rows = (items || []).map(renderEntry).filter(Boolean).join("");
-    return `
-      <article class="day">
-        <h2>${esc(date)}</h2>
-        ${rows || `<div class="note">no entries</div>`}
-      </article>
-    `;
-  }
+  const renderDay = (date, items) => `
+    <article class="day">
+      <h2>${esc(date)}</h2>
+      ${(items || []).map(renderEntry).join("") || `<div class="note">no entries</div>`}
+    </article>
+  `;
 
-  async function load(){
-    if (!content) return;
+  const load = async () => {
     content.innerHTML = "";
-
     try {
       const dates = await fetchJSON("./data/index.json");
-      if (!Array.isArray(dates) || dates.length === 0){
-        content.innerHTML = `<article class="day"><div class="note">no entries yet</div></article>`;
-        return;
-      }
-
-      const useDates = (viewMode === "latest") ? dates.slice(0, 1) : dates;
-
+      const useDates = viewMode === "latest" ? dates.slice(0,1) : dates;
       const blocks = [];
-      for (const d of useDates){
+      for (const d of useDates) {
         try {
           const items = await fetchJSON(`./data/${d}.json`);
           blocks.push(renderDay(d, items));
@@ -111,25 +112,19 @@
           blocks.push(renderDay(d, []));
         }
       }
-
       content.innerHTML = blocks.join("");
       applyFilter();
-    } catch (e) {
-      content.innerHTML = `
-        <article class="day">
-          <div class="note">could not load data</div>
-          <div class="note"><code>${esc(e.message)}</code></div>
-        </article>
-      `;
+    } catch {
+      content.innerHTML = `<div class="note">could not load data</div>`;
     }
-  }
+  };
 
-  btnLatest?.addEventListener("click", () => { viewMode = "latest"; setButtons(); load(); });
-  btnAll?.addEventListener("click",    () => { viewMode = "all";    setButtons(); load(); });
+  btnLatest?.addEventListener("click", () => { viewMode="latest"; setButtons(); load(); });
+  btnAll?.addEventListener("click", () => { viewMode="all"; setButtons(); load(); });
 
-  btnText?.addEventListener("click",   () => { typeFilter = "text";  setButtons(); load(); });
-  btnAudio?.addEventListener("click",  () => { typeFilter = "audio"; setButtons(); load(); });
-  btnVisual?.addEventListener("click", () => { typeFilter = "visual";setButtons(); load(); });
+  btnText?.addEventListener("click", () => { toggleType("text"); setButtons(); applyFilter(); });
+  btnAudio?.addEventListener("click", () => { toggleType("audio"); setButtons(); applyFilter(); });
+  btnVisual?.addEventListener("click", () => { toggleType("visual"); setButtons(); applyFilter(); });
 
   themeToggle?.addEventListener("click", () => {
     const cur = document.documentElement.getAttribute("data-theme") || "light";
