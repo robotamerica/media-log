@@ -6,11 +6,7 @@ import sys
 from pathlib import Path
 
 ALLOWED = {"text", "audio", "visual"}
-ALIASES = {
-    "t": "text",
-    "a": "audio",
-    "v": "visual",
-}
+ALIASES = {"t": "text", "a": "audio", "v": "visual"}
 
 def prompt(label, allow_empty=False):
     while True:
@@ -18,7 +14,7 @@ def prompt(label, allow_empty=False):
         if val or allow_empty:
             return val
 
-def norm_type(t):
+def norm_type(t: str):
     t = (t or "").strip().lower()
     t = ALIASES.get(t, t)
     return t if t in ALLOWED else None
@@ -26,19 +22,16 @@ def norm_type(t):
 def today_iso():
     return dt.date.today().isoformat()
 
-def load_json(path, default):
+def load_json(path: Path, default):
     if not path.exists():
         return default
     return json.loads(path.read_text(encoding="utf-8"))
 
-def save_json(path, data):
+def save_json(path: Path, data):
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        json.dumps(data, ensure_ascii=False, indent=2) + "\n",
-        encoding="utf-8",
-    )
+    path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
-def run(cmd, cwd):
+def run(cmd, cwd: Path):
     return subprocess.run(cmd, cwd=str(cwd)).returncode
 
 def main():
@@ -64,26 +57,26 @@ def main():
 
     day_path = data_dir / f"{day}.json"
     items = load_json(day_path, default=[])
+    if not isinstance(items, list):
+        print(f"{day_path} must be a JSON array")
+        sys.exit(1)
 
-    entry = {
-        "type": t,
-        "url": url,
-        "title": title,
-        "note": note,
-    }
-
-    items.append(entry)
+    items.append({"type": t, "url": url, "title": title, "note": note})
     save_json(day_path, items)
 
     index_path = data_dir / "index.json"
     index = load_json(index_path, default=[])
+    if not isinstance(index, list):
+        print(f"{index_path} must be a JSON array")
+        sys.exit(1)
+
     if day not in index:
         index.append(day)
     save_json(index_path, sorted(set(index), reverse=True))
 
     print(f"[mlog] added {t}: {url}")
 
-    # git section
+    # git
     if run(["git", "rev-parse", "--is-inside-work-tree"], repo) != 0:
         print("[mlog] not a git repo, skipping git")
         return
@@ -91,7 +84,6 @@ def main():
     run(["git", "add", str(day_path), str(index_path)], repo)
     run(["git", "commit", "-m", f"media {day}: {t}"], repo)
     run(["git", "push"], repo)
-
     print("[mlog] committed and pushed")
 
 if __name__ == "__main__":

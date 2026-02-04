@@ -31,40 +31,7 @@
     return "text";
   };
 
-  function setOn(el, on){ if (el) el.classList.toggle("is-on", cat > index.html <<'HTML'
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>media log</title>
-  <link rel="stylesheet" href="./assets/style.css" />
-</head>
-<body>
-  <main class="wrap">
-    <header class="top">
-      <div class="brand">
-        <h1>media log</h1>
-        <p class="desc">a small daily ledger of the media i consumed.</p>
-      </div>
-
-      <div class="controls">
-        <button id="modeLatest" class="btn is-on" type="button">latest</button>
-        <button id="modeAll" class="btn" type="button">all</button>
-        <button id="modeText" class="btn" type="button">text</button>
-        <button id="modeAudio" class="btn" type="button">audio</button>
-        <button id="modeVisual" class="btn" type="button">visual</button>
-        <button id="themeToggle" class="btn" type="button" aria-label="toggle theme">⭘</button>
-      </div>
-    </header>
-
-    <section id="content" class="content" aria-live="polite"></section>
-  </main>
-
-  <script src="./assets/app.js"></script>
-</body>
-</html>
-HTMLon); }
+  function setOn(el, on){ if (el) el.classList.toggle("is-on", !!on); }
 
   function setButtons(){
     setOn(btnLatest, viewMode === "latest");
@@ -157,9 +124,9 @@ HTMLon); }
     }
   }
 
-  // events
   btnLatest?.addEventListener("click", () => { viewMode = "latest"; setButtons(); load(); });
   btnAll?.addEventListener("click",    () => { viewMode = "all";    setButtons(); load(); });
+
   btnText?.addEventListener("click",   () => { typeFilter = "text";  setButtons(); load(); });
   btnAudio?.addEventListener("click",  () => { typeFilter = "audio"; setButtons(); load(); });
   btnVisual?.addEventListener("click", () => { typeFilter = "visual";setButtons(); load(); });
@@ -169,7 +136,6 @@ HTMLon); }
     applyTheme(cur === "dark" ? "light" : "dark");
   });
 
-  // init
   setButtons();
   applyTheme(localStorage.getItem("media-log-theme") || "light");
   load();
