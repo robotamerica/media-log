@@ -153,3 +153,73 @@ html[data-theme="dark"] .btn:hover{
 html[data-theme="dark"] #themeToggle{
   color: #f1e9b6;
 }
+
+/* ─────────────────────────────────────────────
+*    mobile layout fixes (android chrome/firefox)
+*       ───────────────────────────────────────────── */
+
+@media (max-width: 520px){
+    .wrap{ padding: 0.9rem; }
+
+  .top{
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+      }
+
+    .controls{
+        width: 100%;
+        justify-content: flex-start;
+      }
+
+    .btn{
+        padding: 0.42rem 0.7rem;
+      }
+
+    .day{
+        padding: 0.85rem;
+      }
+
+    /* turn each entry into a vertical stack */
+    .item{
+        display: block;
+        margin: 0.55rem 0;
+      }
+
+    /* keep bullet + type + link on the same "primary" line */
+    .item .bullet{
+        display: inline-block;
+        margin-right: 0.55rem;
+      }
+
+    /* the first .note in your markup is the type label */
+    .item > .note{
+        display: inline-block;
+        margin-right: 0.55rem;
+        white-space: nowrap;
+      }
+
+    /* link wraps naturally and doesn’t force horizontal scrolling */
+    .item a{
+        display: inline;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+      }
+
+    /* the second .note (the one you render as "— note") should go below */
+    .item .note + a + .note{
+        display: block;
+        margin-left: 1.1rem; /* indent under bullet */
+        margin-top: 0.25rem;
+      }
+}
+  }
+  }
+  }
+  }
+  }
+  }
+  }
+  }
+  }
+}
