@@ -40,5 +40,11 @@
     "url": "https://darknetdiaries.com/episode/170/",
     "title": "Darknet Diaries EP 170: Phrack",
     "note": "pre-work podcast with coffee"
+  },
+  {
+    "type": "visual",
+    "url": "https://www.youtube.com/watch?v=l5ggH-YhuAw",
+    "title": "I made a real BMO local AI agent with a Raspberry Pi and Ollama",
+    "note": "coffee break video"
   }
 ]
