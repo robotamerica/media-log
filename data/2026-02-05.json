@@ -46,5 +46,11 @@
     "url": "https://www.youtube.com/watch?v=l5ggH-YhuAw",
     "title": "I made a real BMO local AI agent with a Raspberry Pi and Ollama",
     "note": "coffee break video"
+  },
+  {
+    "type": "audio",
+    "url": "https://www.youtube.com/watch?v=DbVTKk3jgXU",
+    "title": "MX",
+    "note": "Digable Planets - Reachin' (A New Refutation of Time and Space) (1993) FULL ALBUM first youtube album played from my boom cli mpv wrapper :D"
   }
 ]
