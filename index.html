@@ -6,6 +6,16 @@
   <title>media log</title>
   <link rel="stylesheet" href="./assets/style.css" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📓</text></svg>">
+<script>
+(function () {
+  const p = new URLSearchParams(window.location.search);
+  const t = (p.get("theme") || "").toLowerCase();
+  if (t === "dark" || t === "light") {
+    document.documentElement.setAttribute("data-theme", t);
+    localStorage.setItem("media-log-theme", t);
+  }
+})();
+</script>
 </head>
 <body>
   <main class="wrap">
