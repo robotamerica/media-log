@@ -1,14 +1,21 @@
 (() => {
   const content = document.getElementById("content");
 
-  const btnLatest = document.getElementById("modeLatest");
-  const btnAll = document.getElementById("modeAll");
+  const btnWeek = document.getElementById("modeWeek");
+  const btnMonth = document.getElementById("modeMonth");
+  const btnPrev = document.getElementById("weekPrev");
+  const btnNext = document.getElementById("weekNext");
+  const monthSelect = document.getElementById("monthSelect");
+
   const btnText = document.getElementById("modeText");
   const btnAudio = document.getElementById("modeAudio");
   const btnVisual = document.getElementById("modeVisual");
   const themeToggle = document.getElementById("themeToggle");
 
-  let viewMode = "latest";
+  let viewMode = "week";
+  let weekPage = 0;
+  let allDates = null;
+
   const activeTypes = new Set(["text", "audio", "visual"]);
 
   const esc = (s="") =>
@@ -31,6 +38,7 @@
   };
 
   const setOn = (el, on) => el && el.classList.toggle("is-on", !!on);
+  const show = (el, on) => el && el.classList.toggle("hidden", !on);
 
   const syncTypeButton = (btn, type) => {
     const on = activeTypes.has(type);
@@ -39,11 +47,21 @@
   };
 
   const setButtons = () => {
-    setOn(btnLatest, viewMode === "latest");
-    setOn(btnAll, viewMode === "all");
+    setOn(btnWeek, viewMode === "week");
+    setOn(btnMonth, viewMode === "month");
+
     syncTypeButton(btnText, "text");
     syncTypeButton(btnAudio, "audio");
     syncTypeButton(btnVisual, "visual");
+
+    show(btnPrev, viewMode === "week");
+    show(btnNext, viewMode === "week");
+    show(monthSelect, viewMode === "month");
+
+    if (viewMode === "week" && allDates && Array.isArray(allDates)) {
+      btnPrev.disabled = weekPage === 0;
+      btnNext.disabled = (weekPage + 1) * 7 >= allDates.length;
+    }
   };
 
   const toggleType = (type) => {
@@ -98,29 +116,100 @@
     </article>
   `;
 
-  const load = async () => {
+  const loadDates = async (dates) => {
     content.innerHTML = "";
-    try {
-      const dates = await fetchJSON("./data/index.json");
-      const useDates = viewMode === "latest" ? dates.slice(0,1) : dates;
-      const blocks = [];
-      for (const d of useDates) {
+    if (!dates || dates.length === 0) {
+      content.innerHTML = `<div class="note">no entries</div>`;
+      return;
+    }
+
+    const blocks = await Promise.all(
+      dates.map(async (d) => {
         try {
           const items = await fetchJSON(`./data/${d}.json`);
-          blocks.push(renderDay(d, items));
+          return renderDay(d, items);
         } catch {
-          blocks.push(renderDay(d, []));
+          return renderDay(d, []);
         }
-      }
-      content.innerHTML = blocks.join("");
-      applyFilter();
-    } catch {
-      content.innerHTML = `<div class="note">could not load data</div>`;
+      })
+    );
+
+    content.innerHTML = blocks.join("");
+    applyFilter();
+  };
+
+  const buildMonthOptions = (dates) => {
+    const months = new Set();
+    for (const d of dates) months.add(d.slice(0, 7));
+    const list = Array.from(months).sort().reverse();
+
+    monthSelect.innerHTML = "";
+    const opt0 = document.createElement("option");
+    opt0.value = "";
+    opt0.textContent = "choose month…";
+    monthSelect.appendChild(opt0);
+
+    for (const m of list) {
+      const o = document.createElement("option");
+      o.value = m;
+      o.textContent = m;
+      monthSelect.appendChild(o);
     }
   };
 
-  btnLatest?.addEventListener("click", () => { viewMode="latest"; setButtons(); load(); });
-  btnAll?.addEventListener("click", () => { viewMode="all"; setButtons(); load(); });
+  const ensureIndex = async () => {
+    if (allDates) return allDates;
+    const dates = await fetchJSON("./data/index.json");
+    allDates = Array.isArray(dates) ? dates : [];
+    buildMonthOptions(allDates);
+    return allDates;
+  };
+
+  const loadWeek = async () => {
+    const dates = await ensureIndex();
+    const start = weekPage * 7;
+    const slice = dates.slice(start, start + 7);
+    setButtons();
+    await loadDates(slice);
+  };
+
+  const loadMonth = async () => {
+    const dates = await ensureIndex();
+    const m = (monthSelect.value || "").trim();
+    setButtons();
+    if (!m) {
+      content.innerHTML = `<div class="note">choose a month to load</div>`;
+      return;
+    }
+    const inMonth = dates.filter(d => d.startsWith(m));
+    await loadDates(inMonth);
+  };
+
+  btnWeek?.addEventListener("click", () => {
+    viewMode = "week";
+    setButtons();
+    loadWeek();
+  });
+
+  btnMonth?.addEventListener("click", () => {
+    viewMode = "month";
+    setButtons();
+    loadMonth();
+  });
+
+  btnPrev?.addEventListener("click", () => {
+    if (weekPage > 0) weekPage -= 1;
+    loadWeek();
+  });
+
+  btnNext?.addEventListener("click", () => {
+    weekPage += 1;
+    loadWeek();
+  });
+
+  monthSelect?.addEventListener("change", () => {
+    if (viewMode === "month") loadMonth();
+  });
 
   btnText?.addEventListener("click", () => { toggleType("text"); setButtons(); applyFilter(); });
   btnAudio?.addEventListener("click", () => { toggleType("audio"); setButtons(); applyFilter(); });
@@ -133,5 +222,5 @@
 
   setButtons();
   applyTheme(localStorage.getItem("media-log-theme") || "light");
-  load();
+  loadWeek();
 })();

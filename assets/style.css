@@ -70,6 +70,17 @@ body{
   white-space:nowrap;
 }
 
+.sel{
+  border:1px solid var(--border);
+  background:var(--btn);
+  color:var(--ink);
+  padding:.5rem .85rem;
+  border-radius:999px;
+  font:inherit;
+  white-space:nowrap;
+  appearance:none;
+}
+
 .btn.is-on{
   border-color:var(--ink);
 }
@@ -79,6 +90,8 @@ html[data-theme="dark"] .btn.is-on{
   background:rgba(230,220,154,.08);
   color:#f4f1d0;
 }
+
+.hidden{ display:none !important; }
 
 .content{
   margin-top:1rem;
