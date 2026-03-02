@@ -10,13 +10,14 @@
   const btnText = document.getElementById("modeText");
   const btnAudio = document.getElementById("modeAudio");
   const btnVisual = document.getElementById("modeVisual");
+  const btnPhysical = document.getElementById("modePhysical");
   const themeToggle = document.getElementById("themeToggle");
 
   let viewMode = "week";
   let weekPage = 0;
   let allDates = null;
 
-  const activeTypes = new Set(["text", "audio", "visual"]);
+  const activeTypes = new Set(["text", "audio", "visual", "physical"]);
 
   const esc = (s="") =>
     String(s ?? "")
@@ -31,6 +32,7 @@
     if (t === "text" || t === "t") return "text";
     if (t === "audio" || t === "a") return "audio";
     if (t === "visual" || t === "v") return "visual";
+    if (t === "physical" || t === "p") return "physical";
     if (t === "reading") return "text";
     if (t === "music") return "audio";
     if (t === "video") return "visual";
@@ -41,9 +43,10 @@
   const show = (el, on) => el && el.classList.toggle("hidden", !on);
 
   const syncTypeButton = (btn, type) => {
+    if (!btn) return;
     const on = activeTypes.has(type);
     setOn(btn, on);
-    btn?.setAttribute("aria-pressed", on ? "true" : "false");
+    btn.setAttribute("aria-pressed", on ? "true" : "false");
   };
 
   const setButtons = () => {
@@ -53,14 +56,15 @@
     syncTypeButton(btnText, "text");
     syncTypeButton(btnAudio, "audio");
     syncTypeButton(btnVisual, "visual");
+    syncTypeButton(btnPhysical, "physical");
 
     show(btnPrev, viewMode === "week");
     show(btnNext, viewMode === "week");
     show(monthSelect, viewMode === "month");
 
     if (viewMode === "week" && allDates && Array.isArray(allDates)) {
-      btnPrev.disabled = weekPage === 0;
-      btnNext.disabled = (weekPage + 1) * 7 >= allDates.length;
+      if (btnPrev) btnPrev.disabled = weekPage === 0;
+      if (btnNext) btnNext.disabled = (weekPage + 1) * 7 >= allDates.length;
     }
   };
 
@@ -70,6 +74,7 @@
       activeTypes.add("text");
       activeTypes.add("audio");
       activeTypes.add("visual");
+      activeTypes.add("physical");
     }
   };
 
@@ -83,7 +88,7 @@
   const applyTheme = (theme) => {
     document.documentElement.setAttribute("data-theme", theme);
     localStorage.setItem("media-log-theme", theme);
-    themeToggle.textContent = theme === "dark" ? "⏾" : "⭘";
+    if (themeToggle) themeToggle.textContent = theme === "dark" ? "⏾" : "⭘";
   };
 
   const fetchJSON = async (path) => {
@@ -94,16 +99,26 @@
 
   const renderEntry = (it) => {
     const t = normalizeType(it.type);
-    const url = it.url || "";
-    const title = it.title ? esc(it.title) : esc(url);
+    const url = (it.url || "").trim();
+    const rawTitle = (it.title || "").trim();
+    const rawAuthor = (it.author || "").trim();
+
+    const titleText = rawTitle ? esc(rawTitle) : (url ? esc(url) : "untitled");
+    const authorText = rawAuthor ? esc(rawAuthor) : "";
+    const byline = authorText ? ` <span class="by">by</span> <span class="author">${authorText}</span>` : "";
+
     const note = it.note ? String(it.note) : "";
     const noteHtml = note ? `<div class="enote">— ${esc(note)}</div>` : "";
+
+    const main = url
+      ? `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${titleText}</a>${byline}`
+      : `<span class="plain">${titleText}</span>${byline}`;
 
     return `
       <div class="item" data-type="${esc(t)}">
         <span class="bullet">•</span>
         <span class="etype">${esc(t)}</span>
-        <a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${title}</a>
+        ${main}
         ${noteHtml}
       </div>
     `;
@@ -143,6 +158,8 @@
     for (const d of dates) months.add(d.slice(0, 7));
     const list = Array.from(months).sort().reverse();
 
+    if (!monthSelect) return;
+
     monthSelect.innerHTML = "";
     const opt0 = document.createElement("option");
     opt0.value = "";
@@ -175,7 +192,7 @@
 
   const loadMonth = async () => {
     const dates = await ensureIndex();
-    const m = (monthSelect.value || "").trim();
+    const m = (monthSelect?.value || "").trim();
     setButtons();
     if (!m) {
       content.innerHTML = `<div class="note">choose a month to load</div>`;
@@ -214,6 +231,7 @@
   btnText?.addEventListener("click", () => { toggleType("text"); setButtons(); applyFilter(); });
   btnAudio?.addEventListener("click", () => { toggleType("audio"); setButtons(); applyFilter(); });
   btnVisual?.addEventListener("click", () => { toggleType("visual"); setButtons(); applyFilter(); });
+  btnPhysical?.addEventListener("click", () => { toggleType("physical"); setButtons(); applyFilter(); });
 
   themeToggle?.addEventListener("click", () => {
     const cur = document.documentElement.getAttribute("data-theme") || "light";
