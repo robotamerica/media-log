@@ -154,3 +154,6 @@ html[data-theme="dark"] .btn.is-on{
   .item{ gap:.45rem; }
   .enote{ margin-left:1.25rem; }
 }
+
+.by{ color: var(--muted); }
+.author{ color: var(--ink); }
