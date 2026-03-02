@@ -14,6 +14,7 @@
     if (t === "text" || t === "t" || t === "reading") return "text";
     if (t === "audio" || t === "a" || t === "music") return "audio";
     if (t === "visual" || t === "v" || t === "video") return "visual";
+    if (t === "physical" || t === "p") return "physical";
     return "text";
   };
 
@@ -25,15 +26,26 @@
 
   function renderEntry(it){
     const t = normalizeType(it.type);
-    const url = it.url || "";
-    const title = it.title ? esc(it.title) : esc(url);
+    const url = (it.url || "").trim();
+    const rawTitle = (it.title || "").trim();
+    const rawAuthor = (it.author || "").trim();
+  
+    const titleText = rawTitle ? esc(rawTitle) : (url ? esc(url) : "untitled");
+    const authorText = rawAuthor ? esc(rawAuthor) : "";
+    const byline = authorText ? ` <span class="by">by</span> <span class="author">${authorText}</span>` : "";
+  
     const note = it.note ? String(it.note) : "";
     const noteHtml = note ? `<div class="enote">— ${esc(note)}</div>` : "";
+  
+    const main = url
+      ? `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${titleText}</a>${byline}`
+      : `<span class="plain">${titleText}</span>${byline}`;
+  
     return `
       <div class="item" data-type="${esc(t)}">
         <span class="bullet">•</span>
         <span class="etype">${esc(t)}</span>
-        <a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${title}</a>
+        ${main}
         ${noteHtml}
       </div>
     `;
